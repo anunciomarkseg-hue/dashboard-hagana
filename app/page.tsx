@@ -177,6 +177,9 @@ export default function Home() {
             </div>
 
             {/* GRÁFICO */}
+      
+
+
             <div className="bg-[#0f1c34] p-6 rounded-xl mb-6">
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={data}>
@@ -188,6 +191,85 @@ export default function Home() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            {/* CRIATIVOS */}
+
+            {/* TABELA DE CAMPANHAS */}
+<div className="mt-8">
+  <h3 className="text-sm mb-4 text-gray-300">
+    Campanhas
+  </h3>
+
+  <div className="bg-[#0f1c34] rounded-xl overflow-hidden">
+
+    <table className="w-full text-sm">
+      <thead className="text-gray-400 border-b border-white/10">
+        <tr>
+          <th className="text-left p-3">Campanha</th>
+          <th className="p-3">Leads</th>
+          <th className="p-3">Investimento</th>
+          <th className="p-3">CPL</th>
+          <th className="p-3">CTR</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {campanhas.map((c) => (
+          <tr
+            key={c.id}
+            className="border-b border-white/5 hover:bg-white/5"
+          >
+            <td className="p-3">{c.nome}</td>
+            <td className="text-center">{c.leads}</td>
+            <td className="text-center">R$ {c.investimento}</td>
+            <td className="text-center">R$ {c.cpl}</td>
+            <td className="text-center">{c.ctr}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<div className="mt-6">
+  <h3 className="text-sm mb-4 text-gray-300">
+    Criativos em destaque
+  </h3>
+
+  <div className="flex gap-4 overflow-x-auto pb-2">
+
+    {/* IMAGEM 1 */}
+    <div className="bg-[#0f1c34] p-3 rounded-xl w-[180px] flex-shrink-0">
+      <img
+        src="/ART MANUAL 01.png"
+        onClick={() => setSelectedMedia("/ART MANUAL 01.png")}
+        className="rounded-lg mb-2 w-full aspect-[4/5] object-cover cursor-pointer"
+      />
+      <p className="text-xs text-gray-400">CTR: 2.3%</p>
+    </div>
+
+    {/* IMAGEM 2 */}
+    <div className="bg-[#0f1c34] p-3 rounded-xl w-[180px] flex-shrink-0">
+      <img
+        src="/ART SIND 03.png"
+        onClick={() => setSelectedMedia("/ART SIND 03.png")}
+        className="rounded-lg mb-2 w-full aspect-[4/5] object-cover cursor-pointer"
+      />
+      <p className="text-xs text-gray-400">CTR: 1.8%</p>
+    </div>
+
+    {/* VÍDEO */}
+    <div className="bg-[#0f1c34] p-3 rounded-xl w-[180px] flex-shrink-0">
+      <video
+        src="/VID SIND 03 (1).mp4"
+        onClick={() => setSelectedMedia("/VID SIND 03 (1).mp4")}
+        className="rounded-lg mb-2 w-full aspect-[4/5] object-cover cursor-pointer"
+      />
+      <p className="text-xs text-gray-400">CTR: 3.1%</p>
+    </div>
+
+  </div>
+</div>
 
           </>
         )}

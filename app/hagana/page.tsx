@@ -54,6 +54,8 @@ if (periodo) {
 
 const json = await res.json();
 
+console.log("META RESPONSE:", json);
+
 const lista = json.data || [];
 
 // 🔥 pega leads

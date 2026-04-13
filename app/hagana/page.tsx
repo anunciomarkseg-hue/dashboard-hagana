@@ -25,6 +25,7 @@ export default function Home() {
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<any>(null);
   const [campanhas, setCampanhas] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<any[]>([]);
 
   const [periodo, setPeriodo] = useState("7");
   const [dataInicio, setDataInicio] = useState("");
@@ -32,32 +33,54 @@ export default function Home() {
 
   useEffect(() => {
     async function fetchData() {
+      let since = "";
+let until = "";
 
-      // 🔥 SIMULAÇÃO (AGORA FUNCIONA)
-      let dados = {
-        leads: 187,
-        investimento: 6420,
-        cpl: 34,
-        conversoes: 29,
-      };
+const hoje = new Date();
 
-      if (periodo === "1") {
-        dados = { leads: 20, investimento: 800, cpl: 40, conversoes: 5 };
-      }
+if (periodo) {
+  const dias = Number(periodo);
 
-      if (periodo === "14") {
-        dados = { leads: 260, investimento: 9000, cpl: 34, conversoes: 40 };
-      }
+  const inicio = new Date();
+  inicio.setDate(hoje.getDate() - dias);
 
-      if (periodo === "30") {
-        dados = { leads: 520, investimento: 18000, cpl: 34, conversoes: 80 };
-      }
+  since = inicio.toISOString().split("T")[0];
+  until = hoje.toISOString().split("T")[0];
+}
 
-      if (periodo === "60") {
-        dados = { leads: 900, investimento: 30000, cpl: 33, conversoes: 140 };
-      }
+     const res = await fetch(
+  `https://graph.facebook.com/v19.0/act_1181570894013658/insights?fields=spend,actions,date_start&time_increment=1&time_range={"since":"${since}","until":"${until}"}&access_token=SEU_TOKEN`
+);
 
-      setMetrics(dados);
+const json = await res.json();
+
+const lista = json.data || [];
+
+// 🔥 pega leads
+// 🔥 joga pro dashboard
+// 🔥 gráfico
+const formatado = lista.map((item: any) => {
+  const leads =
+    item.actions?.find((a: any) => a.action_type === "lead")?.value || 0;
+
+  return {
+    dia: item.date_start.slice(5),
+    leads: Number(leads),
+  };
+});
+
+setChartData(formatado);
+
+// 🔥 totais
+const totalLeads = formatado.reduce((acc, i) => acc + i.leads, 0);
+const totalInvest = lista.reduce((acc, i) => acc + Number(i.spend), 0);
+
+setMetrics({
+  leads: totalLeads,
+  investimento: totalInvest,
+  cpl: totalLeads > 0 ? totalInvest / totalLeads : 0,
+  conversoes: totalLeads,
+});
 
       // campanhas continuam do banco
       const { data: campanhasData } = await supabase
@@ -161,12 +184,15 @@ export default function Home() {
 
               <div className="bg-[#0f1c34] p-5 rounded-xl">
                 <p className="text-gray-400 text-xs">Investimento</p>
-                <h2 className="text-2xl font-bold text-yellow-400">R$ {metrics?.investimento}</h2>
+                <h2 className="text-2xl font-bold text-yellow-400">R$ {metrics?.investimento?.toFixed(2)}</h2>
               </div>
 
               <div className="bg-[#0f1c34] p-5 rounded-xl">
                 <p className="text-gray-400 text-xs">CPL</p>
-                <h2 className="text-2xl font-bold text-blue-400">R$ {metrics?.cpl}</h2>
+                <h2 className="text-2xl font-bold text-blue-400">R$ {metrics?.cpl?.toLocaleString("pt-BR", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})}</h2>
               </div>
 
               <div className="bg-[#0f1c34] p-5 rounded-xl">
@@ -182,7 +208,7 @@ export default function Home() {
 
             <div className="bg-[#0f1c34] p-6 rounded-xl mb-6">
               <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={data}>
+                <LineChart data={chartData}>
                   <CartesianGrid stroke="#1f2a44" />
                   <XAxis dataKey="dia" stroke="#6b7fa8" />
                   <YAxis stroke="#6b7fa8" />
@@ -213,19 +239,26 @@ export default function Home() {
       </thead>
 
       <tbody>
-        {campanhas.map((c) => (
-          <tr
-            key={c.id}
-            className="border-b border-white/5 hover:bg-white/5"
-          >
-            <td className="p-3">{c.nome}</td>
-            <td className="text-center">{c.leads}</td>
-            <td className="text-center">R$ {c.investimento}</td>
-            <td className="text-center">R$ {c.cpl}</td>
-            <td className="text-center">{c.ctr}%</td>
-          </tr>
-        ))}
-      </tbody>
+  {[...campanhas]
+    .sort((a, b) => b.leads - a.leads)
+    .map((c) => (
+      <tr
+        key={c.id}
+        className="border-b border-white/5 hover:bg-white/5"
+      >
+        <td className="p-3">{c.nome}</td>
+        <td className="text-center">{c.leads}</td>
+        <td className="text-center">R$ {c.investimento}</td>
+        <td className="text-center">
+          {c.leads > 0
+            ? `R$ ${(c.investimento / c.leads).toFixed(2)}`
+            : "—"}
+        </td>
+        <td className="text-center">{c.ctr}%</td>
+      </tr>
+    ))}
+</tbody>
+
     </table>
 
   </div>

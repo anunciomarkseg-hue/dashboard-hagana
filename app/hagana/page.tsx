@@ -72,8 +72,8 @@ const formatado = lista.map((item: any) => {
 setChartData(formatado);
 
 // 🔥 totais
-const totalLeads = formatado.reduce((acc, i) => acc + i.leads, 0);
-const totalInvest = lista.reduce((acc, i) => acc + Number(i.spend), 0);
+const totalLeads = formatado.reduce((acc: number, i: any) => acc + i.leads, 0);
+const totalInvest = lista.reduce((acc: number, i: any) => acc + Number(i.spend), 0);
 
 setMetrics({
   leads: totalLeads,

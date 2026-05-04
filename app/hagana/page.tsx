@@ -15,9 +15,14 @@ import {
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="glass px-3 py-2 rounded-xl text-xs">
+    <div
+      className="glass rounded-xl px-3 py-2 text-xs"
+      style={{ minWidth: 100 }}
+    >
       <p className="text-gray-400 mb-1">{label}</p>
-      <p className="text-[#3A7BFF] font-semibold">{payload[0].value} leads</p>
+      <p className="font-semibold" style={{ color: "#3A7BFF" }}>
+        {payload[0].value} leads
+      </p>
     </div>
   );
 }
@@ -46,7 +51,6 @@ export default function Home() {
 
     async function fetchData() {
       setLoading(true);
-
       const hoje = new Date();
       let since = "";
       let until = "";
@@ -76,7 +80,10 @@ export default function Home() {
 
         setChartData(formatado);
 
-        const totalLeads = formatado.reduce((acc: number, i: any) => acc + i.leads, 0);
+        const totalLeads = formatado.reduce(
+          (acc: number, i: any) => acc + i.leads,
+          0
+        );
         const totalInvest = lista.reduce(
           (acc: number, i: any) => acc + Number(i.spend),
           0
@@ -92,7 +99,9 @@ export default function Home() {
         console.error("Meta API error:", e);
       }
 
-      const { data: campanhasData } = await supabase.from("campanhas").select("*");
+      const { data: campanhasData } = await supabase
+        .from("campanhas")
+        .select("*");
       setCampanhas(campanhasData || []);
       setLoading(false);
     }
@@ -101,12 +110,84 @@ export default function Home() {
   }, [periodo, dataInicio, dataFim]);
 
   return (
-    <div className="min-h-screen bg-[#070d1a] text-white" style={{ fontFamily: "var(--font-montserrat), Inter, sans-serif" }}>
+    <div
+      className="min-h-screen text-white overflow-x-hidden"
+      style={{ background: "#060d1e", fontFamily: "var(--font-montserrat), Inter, sans-serif" }}
+    >
 
-      {/* TOP BAR */}
+      {/* ═══════════════════════════════════════
+          PONTOS DE LUZ — background atmosphere
+      ═══════════════════════════════════════ */}
+      <div className="fixed inset-0 overflow-hidden" style={{ pointerEvents: "none", zIndex: 0 }}>
+
+        {/* Orbs grandes */}
+        <div className="orb" style={{
+          top: "-18%", left: "3%",
+          width: 700, height: 700,
+          background: "radial-gradient(circle, rgba(58,123,255,0.13) 0%, transparent 65%)",
+        }} />
+        <div className="orb" style={{
+          top: "35%", right: "-8%",
+          width: 580, height: 580,
+          background: "radial-gradient(circle, rgba(0,85,204,0.10) 0%, transparent 65%)",
+        }} />
+        <div className="orb" style={{
+          bottom: "-12%", left: "38%",
+          width: 700, height: 500,
+          background: "radial-gradient(circle, rgba(58,123,255,0.08) 0%, transparent 65%)",
+        }} />
+
+        {/* Pontos de luz — pequenos */}
+        <span style={{
+          position: "absolute", top: "14%", left: "22%",
+          width: 4, height: 4, borderRadius: "50%",
+          background: "rgba(58,123,255,0.55)",
+          boxShadow: "0 0 10px 4px rgba(58,123,255,0.35)",
+        }} />
+        <span style={{
+          position: "absolute", top: "38%", left: "62%",
+          width: 3, height: 3, borderRadius: "50%",
+          background: "rgba(58,123,255,0.45)",
+          boxShadow: "0 0 8px 3px rgba(58,123,255,0.3)",
+        }} />
+        <span style={{
+          position: "absolute", top: "68%", left: "82%",
+          width: 5, height: 5, borderRadius: "50%",
+          background: "rgba(80,140,255,0.35)",
+          boxShadow: "0 0 14px 5px rgba(58,123,255,0.28)",
+        }} />
+        <span style={{
+          position: "absolute", top: "52%", left: "12%",
+          width: 3, height: 3, borderRadius: "50%",
+          background: "rgba(255,255,255,0.25)",
+          boxShadow: "0 0 8px 3px rgba(255,255,255,0.15)",
+        }} />
+        <span style={{
+          position: "absolute", top: "22%", right: "18%",
+          width: 4, height: 4, borderRadius: "50%",
+          background: "rgba(58,123,255,0.4)",
+          boxShadow: "0 0 12px 5px rgba(58,123,255,0.25)",
+        }} />
+        <span style={{
+          position: "absolute", top: "80%", left: "45%",
+          width: 3, height: 3, borderRadius: "50%",
+          background: "rgba(0,166,81,0.45)",
+          boxShadow: "0 0 10px 4px rgba(0,166,81,0.25)",
+        }} />
+      </div>
+
+      {/* ═══════════════════════════════════════
+          TOP BAR
+      ═══════════════════════════════════════ */}
       <header
-        className="sticky top-0 z-50 border-b border-white/5"
-        style={{ background: "rgba(7, 13, 26, 0.85)", backdropFilter: "blur(20px)" }}
+        className="sticky top-0 z-50"
+        style={{
+          background: "rgba(6,13,30,0.80)",
+          backdropFilter: "blur(24px) saturate(160%)",
+          WebkitBackdropFilter: "blur(24px) saturate(160%)",
+          borderBottom: "1px solid rgba(58,123,255,0.12)",
+          boxShadow: "0 1px 0 rgba(58,123,255,0.06)",
+        }}
       >
         <div className="flex items-center justify-between px-6 h-14">
 
@@ -121,47 +202,75 @@ export default function Home() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                style={
                   tab === t.key
-                    ? "bg-[#3A7BFF] text-white"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-                style={tab === t.key ? { boxShadow: "0 0 20px rgba(58,123,255,0.35)" } : {}}
+                    ? {
+                        background: "rgba(58,123,255,0.18)",
+                        color: "#3A7BFF",
+                        border: "1px solid rgba(58,123,255,0.38)",
+                        boxShadow: "0 0 16px rgba(58,123,255,0.2)",
+                      }
+                    : {
+                        color: "rgba(255,255,255,0.45)",
+                        border: "1px solid transparent",
+                      }
+                }
               >
                 {t.label}
               </button>
             ))}
           </nav>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {PERIODOS.map((p) => (
               <button
                 key={p.value}
-                onClick={() => { setPeriodo(p.value); setDataInicio(""); setDataFim(""); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                onClick={() => {
+                  setPeriodo(p.value);
+                  setDataInicio("");
+                  setDataFim("");
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={
                   periodo === p.value
-                    ? "bg-[#3A7BFF]/20 text-[#3A7BFF] border border-[#3A7BFF]/40"
-                    : "text-gray-500 hover:text-gray-300"
-                }`}
+                    ? {
+                        background: "rgba(58,123,255,0.15)",
+                        color: "#3A7BFF",
+                        border: "1px solid rgba(58,123,255,0.35)",
+                      }
+                    : { color: "rgba(255,255,255,0.35)" }
+                }
               >
                 {p.label}
               </button>
             ))}
-            <div className="flex items-center gap-1.5 ml-2 pl-3 border-l border-white/10">
+            <div
+              className="flex items-center gap-1.5 ml-2 pl-3"
+              style={{ borderLeft: "1px solid rgba(255,255,255,0.07)" }}
+            >
               <input
                 type="date"
                 value={dataInicio}
                 onChange={(e) => { setDataInicio(e.target.value); setPeriodo(""); }}
-                className="bg-white/5 border border-white/10 px-2 py-1 rounded-lg text-xs text-white"
-                style={{ colorScheme: "dark" }}
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  colorScheme: "dark",
+                }}
+                className="px-2 py-1 rounded-lg text-xs text-white"
               />
-              <span className="text-gray-600 text-xs">—</span>
+              <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>—</span>
               <input
                 type="date"
                 value={dataFim}
                 onChange={(e) => { setDataFim(e.target.value); setPeriodo(""); }}
-                className="bg-white/5 border border-white/10 px-2 py-1 rounded-lg text-xs text-white"
-                style={{ colorScheme: "dark" }}
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  colorScheme: "dark",
+                }}
+                className="px-2 py-1 rounded-lg text-xs text-white"
               />
             </div>
           </div>
@@ -169,32 +278,46 @@ export default function Home() {
         </div>
       </header>
 
-      {/* CONTENT */}
-      <main className="p-6 max-w-[1600px] mx-auto">
-
+      {/* ═══════════════════════════════════════
+          MAIN CONTENT
+      ═══════════════════════════════════════ */}
+      <main
+        className="p-6 max-w-[1600px] mx-auto"
+        style={{ position: "relative", zIndex: 1 }}
+      >
         {tab === "meta" && (
           <>
             {/* KPI CARDS */}
             <div className="grid grid-cols-4 gap-4 mb-5">
 
               <div className="glass rounded-2xl p-5">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3">Leads</p>
-                <p className="text-3xl font-bold text-[#00A651]">
+                <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }} className="uppercase mb-3">
+                  Leads
+                </p>
+                <p className="text-3xl font-bold" style={{ color: "#00A651" }}>
                   {loading ? "—" : (metrics?.leads ?? "—")}
                 </p>
-                <p className="text-xs text-gray-600 mt-2">captados no período</p>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 8 }}>
+                  captados no período
+                </p>
               </div>
 
               <div className="glass rounded-2xl p-5">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3">Investimento</p>
-                <p className="text-3xl font-bold text-[#3A7BFF]">
+                <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }} className="uppercase mb-3">
+                  Investimento
+                </p>
+                <p className="text-3xl font-bold" style={{ color: "#3A7BFF" }}>
                   {loading ? "—" : `R$ ${metrics?.investimento?.toFixed(2) ?? "—"}`}
                 </p>
-                <p className="text-xs text-gray-600 mt-2">gasto total</p>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 8 }}>
+                  gasto total
+                </p>
               </div>
 
               <div className="glass rounded-2xl p-5">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3">CPL</p>
+                <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }} className="uppercase mb-3">
+                  CPL
+                </p>
                 <p className="text-3xl font-bold text-white">
                   {loading
                     ? "—"
@@ -203,15 +326,21 @@ export default function Home() {
                         maximumFractionDigits: 2,
                       }) ?? "—"}`}
                 </p>
-                <p className="text-xs text-gray-600 mt-2">custo por lead</p>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 8 }}>
+                  custo por lead
+                </p>
               </div>
 
               <div className="glass rounded-2xl p-5">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3">Conversões</p>
-                <p className="text-3xl font-bold text-purple-400">
+                <p style={{ fontSize: 10, letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }} className="uppercase mb-3">
+                  Conversões
+                </p>
+                <p className="text-3xl font-bold" style={{ color: "#a78bfa" }}>
                   {loading ? "—" : (metrics?.conversoes ?? "—")}
                 </p>
-                <p className="text-xs text-gray-600 mt-2">total no período</p>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginTop: 8 }}>
+                  total no período
+                </p>
               </div>
 
             </div>
@@ -223,37 +352,42 @@ export default function Home() {
               <div className="col-span-3 glass rounded-2xl p-5">
                 <div className="flex items-start justify-between mb-5">
                   <div>
-                    <h3 className="font-semibold text-white text-sm">Leads por dia</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">Volume de captação</p>
+                    <p className="font-semibold text-sm text-white">Leads por dia</p>
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                      Volume de captação
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-[#3A7BFF]">
+                    <p className="text-2xl font-bold" style={{ color: "#3A7BFF" }}>
                       {loading ? "—" : (metrics?.leads ?? "—")}
                     </p>
-                    <p className="text-xs text-gray-500">total</p>
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>total</p>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
+                  <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
                     <defs>
                       <linearGradient id="leadsGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3A7BFF" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#3A7BFF" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#3A7BFF" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#3A7BFF" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid stroke="rgba(255,255,255,0.04)" vertical={false} />
                     <XAxis
                       dataKey="dia"
-                      tick={{ fill: "#4a5878", fontSize: 11 }}
+                      tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }}
                       axisLine={false}
                       tickLine={false}
                     />
                     <YAxis
-                      tick={{ fill: "#4a5878", fontSize: 11 }}
+                      tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }}
                       axisLine={false}
                       tickLine={false}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(58,123,255,0.2)", strokeWidth: 1 }} />
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      cursor={{ stroke: "rgba(58,123,255,0.18)", strokeWidth: 1 }}
+                    />
                     <Area
                       type="monotone"
                       dataKey="leads"
@@ -261,7 +395,7 @@ export default function Home() {
                       strokeWidth={2}
                       fill="url(#leadsGrad)"
                       dot={false}
-                      activeDot={{ r: 4, fill: "#3A7BFF", stroke: "#070d1a", strokeWidth: 2 }}
+                      activeDot={{ r: 4, fill: "#3A7BFF", stroke: "#060d1e", strokeWidth: 2 }}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -269,14 +403,21 @@ export default function Home() {
 
               {/* CAMPAIGNS TABLE */}
               <div className="col-span-2 glass rounded-2xl p-5">
-                <h3 className="font-semibold text-white text-sm mb-4">Campanhas</h3>
-                <table className="w-full text-xs">
+                <p className="font-semibold text-sm text-white mb-4">Campanhas</p>
+                <table className="w-full" style={{ fontSize: 12 }}>
                   <thead>
-                    <tr className="text-gray-600 border-b border-white/5 text-[10px] uppercase tracking-wider">
-                      <th className="text-left pb-3 font-medium">Campanha</th>
-                      <th className="pb-3 font-medium text-right">Leads</th>
-                      <th className="pb-3 font-medium text-right">CPL</th>
-                      <th className="pb-3 font-medium text-right">CTR</th>
+                    <tr
+                      style={{
+                        color: "rgba(255,255,255,0.3)",
+                        fontSize: 10,
+                        letterSpacing: "0.1em",
+                        borderBottom: "1px solid rgba(255,255,255,0.05)",
+                      }}
+                    >
+                      <th className="text-left pb-3 font-medium uppercase">Campanha</th>
+                      <th className="pb-3 font-medium text-right uppercase">Leads</th>
+                      <th className="pb-3 font-medium text-right uppercase">CPL</th>
+                      <th className="pb-3 font-medium text-right uppercase">CTR</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -285,19 +426,35 @@ export default function Home() {
                       .map((c) => (
                         <tr
                           key={c.id}
-                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+                          className="transition-colors hover:bg-white/5"
                         >
-                          <td className="py-3 text-gray-300 max-w-[120px] truncate pr-2">{c.nome}</td>
-                          <td className="py-3 text-right font-semibold text-[#00A651]">{c.leads}</td>
-                          <td className="py-3 text-right text-gray-400">
-                            {c.leads > 0 ? `R$${(c.investimento / c.leads).toFixed(0)}` : "—"}
+                          <td
+                            className="py-3 pr-2 truncate max-w-[110px]"
+                            style={{ color: "rgba(255,255,255,0.7)" }}
+                          >
+                            {c.nome}
                           </td>
-                          <td className="py-3 text-right text-[#3A7BFF]">{c.ctr}%</td>
+                          <td className="py-3 text-right font-semibold" style={{ color: "#00A651" }}>
+                            {c.leads}
+                          </td>
+                          <td className="py-3 text-right" style={{ color: "rgba(255,255,255,0.5)" }}>
+                            {c.leads > 0
+                              ? `R$${(c.investimento / c.leads).toFixed(0)}`
+                              : "—"}
+                          </td>
+                          <td className="py-3 text-right" style={{ color: "#3A7BFF" }}>
+                            {c.ctr}%
+                          </td>
                         </tr>
                       ))}
                     {campanhas.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-10 text-center text-gray-600">
+                        <td
+                          colSpan={4}
+                          className="py-10 text-center"
+                          style={{ color: "rgba(255,255,255,0.2)" }}
+                        >
                           Sem dados
                         </td>
                       </tr>
@@ -310,9 +467,8 @@ export default function Home() {
 
             {/* CREATIVES */}
             <div className="glass rounded-2xl p-5">
-              <h3 className="font-semibold text-white text-sm mb-4">Criativos em destaque</h3>
+              <p className="font-semibold text-sm text-white mb-4">Criativos em destaque</p>
               <div className="flex gap-4 overflow-x-auto pb-1">
-
                 {[
                   { src: "/ART MANUAL 01.png", ctr: "2.3", type: "img" },
                   { src: "/ART SIND 03.png", ctr: "1.8", type: "img" },
@@ -321,27 +477,36 @@ export default function Home() {
                   <div
                     key={item.src}
                     onClick={() => setSelectedMedia(item.src)}
-                    className="glass-hover flex-shrink-0 w-[155px] rounded-xl overflow-hidden cursor-pointer transition-all border border-white/5"
+                    className="glass glass-hover flex-shrink-0 rounded-xl overflow-hidden cursor-pointer transition-all"
+                    style={{ width: 155 }}
                   >
                     {item.type === "video" ? (
                       <video
                         src={item.src}
-                        className="w-full aspect-[4/5] object-cover"
+                        className="w-full object-cover"
+                        style={{ aspectRatio: "4/5" }}
                         muted
                       />
                     ) : (
                       <img
                         src={item.src}
-                        className="w-full aspect-[4/5] object-cover"
+                        className="w-full object-cover"
+                        style={{ aspectRatio: "4/5" }}
                       />
                     )}
-                    <div className="px-3 py-2.5 border-t border-white/5">
-                      <p className="text-[10px] text-gray-500 uppercase tracking-wider">CTR</p>
-                      <p className="text-sm font-semibold text-[#3A7BFF]">{item.ctr}%</p>
+                    <div
+                      className="px-3 py-2.5"
+                      style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+                    >
+                      <p style={{ fontSize: 10, letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }} className="uppercase">
+                        CTR
+                      </p>
+                      <p className="text-sm font-semibold" style={{ color: "#3A7BFF" }}>
+                        {item.ctr}%
+                      </p>
                     </div>
                   </div>
                 ))}
-
               </div>
             </div>
           </>
@@ -349,27 +514,36 @@ export default function Home() {
 
         {tab === "google" && (
           <div className="glass rounded-2xl p-16 text-center">
-            <p className="text-sm text-gray-500">Google Ads — em breve</p>
+            <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 14 }}>
+              Google Ads — em breve
+            </p>
           </div>
         )}
 
         {tab === "crm" && (
           <div className="glass rounded-2xl p-16 text-center">
-            <p className="text-sm text-gray-500">CRM — em breve</p>
+            <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 14 }}>
+              CRM — em breve
+            </p>
           </div>
         )}
-
       </main>
 
-      {/* MEDIA MODAL */}
+      {/* ═══════════════════════════════════════
+          MEDIA MODAL
+      ═══════════════════════════════════════ */}
       {selectedMedia && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-8"
-          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+          style={{
+            background: "rgba(0,0,0,0.88)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+          }}
           onClick={() => setSelectedMedia(null)}
         >
           <div
-            className="max-w-md w-full glass rounded-2xl overflow-hidden"
+            className="glass rounded-2xl overflow-hidden max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
             {selectedMedia.endsWith(".mp4") ? (

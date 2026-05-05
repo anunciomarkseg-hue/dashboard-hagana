@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import VisaoGeral from "./components/VisaoGeral";
 import MetaAds from "./components/MetaAds";
 import GoogleAds from "./components/GoogleAds";
@@ -25,14 +25,8 @@ const PERIODOS = [
   { label: "60D", value: "60" },
 ];
 
-function getDateRange(periodo: string) {
-  const hoje = new Date();
-  const inicio = new Date();
-  inicio.setDate(hoje.getDate() - Number(periodo));
-  return {
-    since: inicio.toISOString().split("T")[0],
-    until: hoje.toISOString().split("T")[0],
-  };
+function toYMD(d: Date) {
+  return d.toISOString().split("T")[0];
 }
 
 export default function Home() {
@@ -44,34 +38,37 @@ export default function Home() {
   const [googleData, setGoogleData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!periodo && (!dataInicio || !dataFim)) return;
+  // Compute since/until once — used everywhere
+  const { since, until } = useMemo(() => {
+    if (periodo) {
+      const hoje = new Date();
+      const inicio = new Date();
+      inicio.setDate(hoje.getDate() - Number(periodo));
+      return { since: toYMD(inicio), until: toYMD(hoje) };
+    }
+    return { since: dataInicio, until: dataFim };
+  }, [periodo, dataInicio, dataFim]);
 
-    async function fetchAll() {
-      setLoading(true);
-      try {
-        let since, until;
-        if (periodo) {
-          ({ since, until } = getDateRange(periodo));
-        } else {
-          since = dataInicio;
-          until = dataFim;
-        }
-        const [metaRes, googleRes] = await Promise.all([
-          fetch(`/api/meta?since=${since}&until=${until}`),
-          fetch(`/api/google/ads?since=${since}&until=${until}`),
-        ]);
-        const [metaJson, googleJson] = await Promise.all([metaRes.json(), googleRes.json()]);
+  useEffect(() => {
+    if (!since || !until) return;
+
+    let cancelled = false;
+    setLoading(true);
+
+    Promise.all([
+      fetch(`/api/meta?since=${since}&until=${until}`).then((r) => r.json()),
+      fetch(`/api/google/ads?since=${since}&until=${until}`).then((r) => r.json()),
+    ])
+      .then(([metaJson, googleJson]) => {
+        if (cancelled) return;
         setMetaData(metaJson);
         setGoogleData(googleJson);
-      } catch (e) {
-        console.error("Erro APIs:", e);
-      }
-      setLoading(false);
-    }
+      })
+      .catch((e) => console.error("Erro APIs:", e))
+      .finally(() => { if (!cancelled) setLoading(false); });
 
-    fetchAll();
-  }, [periodo, dataInicio, dataFim]);
+    return () => { cancelled = true; };
+  }, [since, until]);
 
   return (
     <div className="min-h-screen text-white" style={{ background: "#060d1e", fontFamily: "var(--font-montserrat), Inter, sans-serif" }}>
@@ -129,9 +126,21 @@ export default function Home() {
               </button>
             ))}
             <div className="flex items-center gap-1 ml-2 pl-2" style={{ borderLeft: "1px solid rgba(255,255,255,0.07)" }}>
-              <input type="date" value={dataInicio} onChange={(e) => { setDataInicio(e.target.value); setPeriodo(""); }} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", colorScheme: "dark" }} className="px-2 py-1 rounded-lg text-xs text-white" />
+              <input
+                type="date"
+                value={dataInicio}
+                onChange={(e) => { setDataInicio(e.target.value); setPeriodo(""); }}
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", colorScheme: "dark" }}
+                className="px-2 py-1 rounded-lg text-xs text-white"
+              />
               <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>—</span>
-              <input type="date" value={dataFim} onChange={(e) => { setDataFim(e.target.value); setPeriodo(""); }} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", colorScheme: "dark" }} className="px-2 py-1 rounded-lg text-xs text-white" />
+              <input
+                type="date"
+                value={dataFim}
+                onChange={(e) => { setDataFim(e.target.value); setPeriodo(""); }}
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", colorScheme: "dark" }}
+                className="px-2 py-1 rounded-lg text-xs text-white"
+              />
             </div>
           </div>
         </div>
@@ -139,12 +148,12 @@ export default function Home() {
 
       {/* CONTENT */}
       <main className="p-6 max-w-[1600px] mx-auto" style={{ position: "relative", zIndex: 1 }}>
-        {tab === "geral" && <VisaoGeral metaData={metaData} googleData={googleData} loading={loading} />}
+        {tab === "geral" && <VisaoGeral metaData={metaData} googleData={googleData} loading={loading} since={since} until={until} />}
         {tab === "meta" && <MetaAds data={metaData} loading={loading} />}
-        {tab === "google" && <GoogleAds since={periodo ? getDateRange(periodo).since : dataInicio} until={periodo ? getDateRange(periodo).until : dataFim} />}
-        {tab === "crm" && <CRM />}
+        {tab === "google" && <GoogleAds since={since} until={until} />}
+        {tab === "crm" && <CRM since={since} until={until} />}
         {tab === "criativos" && <Criativos metaData={metaData} />}
-        {tab === "clarity" && <Clarity />}
+        {tab === "clarity" && <Clarity since={since} until={until} />}
       </main>
     </div>
   );

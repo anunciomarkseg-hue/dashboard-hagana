@@ -5,12 +5,14 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis
 
 const CORES = ["#3A7BFF", "#f5c518", "#ec4899", "#f97316", "#22c55e", "#a78bfa", "#6b7280"];
 
-export default function Clarity() {
+export default function Clarity({ since, until }: { since: string; until: string }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setErro(null);
     fetch("/api/clarity")
       .then((r) => r.json())
       .then((d) => {
@@ -19,7 +21,7 @@ export default function Clarity() {
         setLoading(false);
       })
       .catch((e) => { setErro(String(e)); setLoading(false); });
-  }, []);
+  }, [since, until]);
 
   const sessoes = data?.Traffic?.totalSessionCount ?? 0;
   const usuarios = data?.Traffic?.totalUserCount ?? 0;

@@ -32,7 +32,10 @@ function Gauge({ value, max, color, label, display }: any) {
   );
 }
 
-export default function VisaoGeral({ metaData, googleData, loading }: { metaData: any; googleData: any; loading: boolean }) {
+export default function VisaoGeral({ metaData, googleData, loading, since, until }: { metaData: any; googleData: any; loading: boolean; since: string; until: string }) {
+  const metaErr = metaData?.meta_error || metaData?.error;
+  const googleErr = googleData?.error;
+
   const insights = metaData?.insights || [];
   const meta = insights.reduce(
     (acc: any, d: any) => {
@@ -73,6 +76,13 @@ export default function VisaoGeral({ metaData, googleData, loading }: { metaData
 
   return (
     <div>
+      {/* Erros de API */}
+      {(metaErr || googleErr) && (
+        <div className="mb-4 p-3 rounded-xl text-xs space-y-1" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
+          {metaErr && <p style={{ color: "#ef4444" }}>Meta API erro: {JSON.stringify(metaErr)}</p>}
+          {googleErr && <p style={{ color: "#ef4444" }}>Google API erro: {googleErr}</p>}
+        </div>
+      )}
       {/* 8 KPI cards */}
       <div className="grid grid-cols-8 gap-3 mb-5">
         {[

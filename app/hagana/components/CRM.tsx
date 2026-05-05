@@ -16,16 +16,18 @@ function corEtapa(etapa: string) {
   return ETAPA_CORES[etapa] || "#6b7280";
 }
 
-export default function CRM() {
+export default function CRM({ since, until }: { since: string; until: string }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/rdstation/leads")
+    if (!since || !until) return;
+    setLoading(true);
+    fetch(`/api/rdstation/leads?since=${since}&until=${until}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [since, until]);
 
   const total = data?.total ?? 0;
   const porOrigem: Record<string, number> = data?.porOrigem ?? {};

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const TOKEN = process.env.META_ACCESS_TOKEN!;
-const ACCOUNT = process.env.META_ACCOUNT_ID!;
+const TOKEN = (process.env.META_ACCESS_TOKEN || "").trim();
+const ACCOUNT = (process.env.META_ACCOUNT_ID || "").trim();
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);

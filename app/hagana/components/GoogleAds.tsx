@@ -1,62 +1,46 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from "recharts";
-
-const MOCK = {
-  spend: 764.37,
-  impressions: 1125,
-  clicks: 64,
-  ctr: 5.69,
-  cpc: 11.94,
-  conversoes: 3,
-  custoConv: 254.79,
-  keywords: [
-    { termo: '"seg. privada curitiba"', cliques: 11 },
-    { termo: "empresa portaria curitiba", cliques: 4 },
-    { termo: "terc. portaria limpeza", cliques: 1 },
-    { termo: "terc. porteiro", cliques: 4 },
-    { termo: "emp. terceirizadas curitiba", cliques: 1 },
-  ],
-  conversoesList: [
-    { termo: '"empresa de portaria curitiba"', tipo: "Frase", ctr: 50, cpc: 3.73, conv: 1 },
-    { termo: "terceirização portaria e limpeza", tipo: "Ampla", ctr: 100, cpc: 18.75, conv: 1 },
-  ],
-  termosExcluidos: ["up terceirização", "singular empresa", "empresa costa oeste", "adservi curitiba", "higiserv", "via serviços"],
-  topTermos: [
-    { termo: "facilities", cliques: 2, custo: 19.34, tipo: "Ampla" },
-    { termo: "deuseg empresa de limpeza", cliques: 2, custo: 11.08, tipo: "Frase" },
-    { termo: "base facilities curitiba", cliques: 2, custo: 14.93, tipo: "Frase" },
-    { termo: "portaria limpeza e conservação", cliques: 2, custo: 53.68, tipo: "Ampla" },
-    { termo: "jr segurança", cliques: 1, custo: 0.95, tipo: "Frase" },
-    { termo: "via facilities", cliques: 1, custo: 2.01, tipo: "Frase" },
-    { termo: "empresas terceirizadas em curitiba", cliques: 1, custo: 9.74, tipo: "Frase" },
-    { termo: "empresa deuseg curitiba", cliques: 1, custo: 4.52, tipo: "Frase" },
-    { termo: "empresas de serviços terceirizados", cliques: 1, custo: 9.24, tipo: "Ampla" },
-    { termo: "atual limpeza e conservação", cliques: 1, custo: 8.51, tipo: "Frase" },
-  ],
-};
 
 function brl(n: number) {
   return `R$ ${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export default function GoogleAds() {
+export default function GoogleAds({ since, until }: { since: string; until: string }) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!since || !until) return;
+    setLoading(true);
+    fetch(`/api/google/ads?since=${since}&until=${until}`)
+      .then((r) => r.json())
+      .then((d) => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [since, until]);
+
+  const m = data?.metrics;
+  const campanhas = data?.campanhas || [];
+  const keywords = data?.keywords || [];
+  const termos = data?.termos || [];
+
   return (
     <div>
       <div className="flex items-baseline gap-3 mb-5">
         <h2 className="text-xl font-bold text-white">Google Ads</h2>
-        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>[Pesquisa] Intenção — Markseg</span>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>dados em tempo real</span>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-6 gap-3 mb-5">
         {[
-          { label: "Investimento", value: brl(MOCK.spend), color: "#f5c518" },
-          { label: "Impressões", value: MOCK.impressions.toLocaleString("pt-BR"), color: "#ffffff", sub: "pesquisa" },
-          { label: "Cliques", value: String(MOCK.clicks), color: "#22c55e", sub: `CTR ${MOCK.ctr}%` },
-          { label: "CPC Médio", value: brl(MOCK.cpc), color: "#ffffff" },
-          { label: "Conversões", value: String(MOCK.conversoes), color: "#22c55e", sub: "rastreadas" },
-          { label: "Custo/Conv.", value: brl(MOCK.custoConv), color: "#f5c518" },
+          { label: "Investimento", value: loading ? "—" : brl(m?.spend ?? 0), color: "#f5c518" },
+          { label: "Impressões", value: loading ? "—" : (m?.impressions ?? 0).toLocaleString("pt-BR"), color: "#ffffff", sub: "pesquisa" },
+          { label: "Cliques", value: loading ? "—" : String(m?.clicks ?? 0), color: "#22c55e", sub: loading ? "" : `CTR ${(m?.ctr ?? 0).toFixed(2)}%` },
+          { label: "CPC Médio", value: loading ? "—" : brl(m?.cpc ?? 0), color: "#ffffff" },
+          { label: "Conversões", value: loading ? "—" : String(m?.conversoes ?? 0), color: "#22c55e", sub: "rastreadas" },
+          { label: "Custo/Conv.", value: loading ? "—" : brl(m?.custoConv ?? 0), color: "#f5c518" },
         ].map((k) => (
           <div key={k.label} className="glass rounded-xl p-4">
             <p style={{ fontSize: 10, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }} className="uppercase mb-2">{k.label}</p>
@@ -66,23 +50,24 @@ export default function GoogleAds() {
         ))}
       </div>
 
-      {/* Charts row */}
+      {/* Charts */}
       <div className="grid grid-cols-2 gap-4 mb-5">
-        {/* Bar chart keywords */}
+
+        {/* Keywords chart */}
         <div className="glass rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <span className="w-2 h-2 rounded-full bg-yellow-400" />
             <p className="text-sm font-semibold text-white">Top Palavras-chave — Cliques</p>
           </div>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={MOCK.keywords} margin={{ left: -20 }}>
+            <BarChart data={keywords} margin={{ left: -20 }}>
               <CartesianGrid stroke="rgba(255,255,255,0.04)" vertical={false} />
               <XAxis dataKey="termo" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ background: "#0c1628", border: "1px solid rgba(58,123,255,0.2)", borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="cliques" radius={[4, 4, 0, 0]}>
-                {MOCK.keywords.map((_, i) => (
-                  <Cell key={i} fill={["#ef4444","#22c55e","#22c55e","#f5c518","#a78bfa"][i % 5]} />
+              <Bar dataKey="clicks" radius={[4, 4, 0, 0]}>
+                {keywords.map((_: any, i: number) => (
+                  <Cell key={i} fill={["#ef4444","#22c55e","#22c55e","#f5c518","#a78bfa","#3A7BFF","#ef4444","#22c55e","#f5c518","#a78bfa"][i % 10]} />
                 ))}
               </Bar>
             </BarChart>
@@ -95,32 +80,70 @@ export default function GoogleAds() {
             <span className="w-2 h-2 rounded-full bg-green-400" />
             <p className="text-sm font-semibold text-white">Palavras com Conversão</p>
           </div>
-          <p style={{ fontSize: 10, letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }} className="uppercase mb-3">Conversões confirmadas</p>
-          {MOCK.conversoesList.map((c, i) => (
-            <div key={i} className="mb-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-white font-medium">{c.termo}</p>
-                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
-                    {c.tipo} · CTR {c.ctr}% · CPC R${c.cpc}
-                  </p>
-                </div>
-                <span className="px-2 py-1 rounded-lg text-xs font-semibold" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>
-                  {c.conv} conv.
-                </span>
-              </div>
-            </div>
-          ))}
-          <p style={{ fontSize: 10, letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }} className="uppercase mt-4 mb-2">Termos excluídos esta semana</p>
-          <div className="flex flex-wrap gap-1.5">
-            {MOCK.termosExcluidos.map((t) => (
-              <span key={t} className="px-2 py-0.5 rounded text-xs" style={{ background: "rgba(239,68,68,0.12)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}>
-                {t}
-              </span>
-            ))}
-          </div>
+          {loading ? (
+            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Carregando...</p>
+          ) : (
+            <>
+              <p style={{ fontSize: 10, letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }} className="uppercase mb-3">Conversões confirmadas</p>
+              {keywords.filter((k: any) => k.conversoes > 0).length === 0 ? (
+                <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>Nenhuma conversão no período</p>
+              ) : (
+                keywords.filter((k: any) => k.conversoes > 0).map((k: any, i: number) => (
+                  <div key={i} className="mb-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-white font-medium">"{k.termo}"</p>
+                        <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                          {k.tipo} · CTR {k.ctr.toFixed(1)}% · CPC {brl(k.cpc)}
+                        </p>
+                      </div>
+                      <span className="px-2 py-1 rounded-lg text-xs font-semibold" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>
+                        {k.conversoes} conv.
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </>
+          )}
         </div>
       </div>
+
+      {/* Campanhas */}
+      {campanhas.length > 0 && (
+        <div className="glass rounded-2xl p-5 mb-5">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-2 h-2 rounded-full bg-blue-400" />
+            <p className="text-sm font-semibold text-white">Campanhas</p>
+          </div>
+          <table className="w-full" style={{ fontSize: 12 }}>
+            <thead>
+              <tr style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, letterSpacing: "0.08em", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <th className="text-left pb-3 font-medium uppercase">Campanha</th>
+                <th className="pb-3 text-right font-medium uppercase">Impressões</th>
+                <th className="pb-3 text-right font-medium uppercase">Cliques</th>
+                <th className="pb-3 text-right font-medium uppercase">CTR</th>
+                <th className="pb-3 text-right font-medium uppercase">CPC</th>
+                <th className="pb-3 text-right font-medium uppercase">Conversões</th>
+                <th className="pb-3 text-right font-medium uppercase">Gasto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {campanhas.map((c: any, i: number) => (
+                <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }} className="hover:bg-white/5 transition-colors">
+                  <td className="py-3" style={{ color: "rgba(255,255,255,0.8)" }}>{c.nome}</td>
+                  <td className="py-3 text-right" style={{ color: "rgba(255,255,255,0.6)" }}>{c.impressions.toLocaleString("pt-BR")}</td>
+                  <td className="py-3 text-right font-semibold" style={{ color: "#22c55e" }}>{c.clicks}</td>
+                  <td className="py-3 text-right" style={{ color: "rgba(255,255,255,0.6)" }}>{c.ctr.toFixed(2)}%</td>
+                  <td className="py-3 text-right" style={{ color: "rgba(255,255,255,0.6)" }}>{brl(c.cpc)}</td>
+                  <td className="py-3 text-right" style={{ color: c.conversoes > 0 ? "#22c55e" : "rgba(255,255,255,0.4)" }}>{c.conversoes}</td>
+                  <td className="py-3 text-right" style={{ color: "#f5c518" }}>{brl(c.spend)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Top 10 Termos */}
       <div className="glass rounded-2xl p-5">
@@ -134,22 +157,28 @@ export default function GoogleAds() {
               <th className="text-left pb-3 font-medium uppercase">Termo</th>
               <th className="pb-3 text-right font-medium uppercase">Cliques</th>
               <th className="pb-3 text-right font-medium uppercase">Custo</th>
+              <th className="pb-3 text-right font-medium uppercase">Conv.</th>
               <th className="pb-3 text-right font-medium uppercase">Tipo</th>
             </tr>
           </thead>
           <tbody>
-            {MOCK.topTermos.map((t, i) => (
+            {loading ? (
+              <tr><td colSpan={5} className="py-8 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>Carregando...</td></tr>
+            ) : termos.length === 0 ? (
+              <tr><td colSpan={5} className="py-8 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>Sem dados no período</td></tr>
+            ) : termos.map((t: any, i: number) => (
               <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }} className="hover:bg-white/5 transition-colors">
                 <td className="py-2.5" style={{ color: "#3A7BFF" }}>{t.termo}</td>
-                <td className="py-2.5 text-right font-semibold" style={{ color: t.cliques >= 2 ? "#22c55e" : "rgba(255,255,255,0.6)" }}>{t.cliques}</td>
+                <td className="py-2.5 text-right font-semibold" style={{ color: t.clicks >= 2 ? "#22c55e" : "rgba(255,255,255,0.6)" }}>{t.clicks}</td>
                 <td className="py-2.5 text-right" style={{ color: t.custo > 30 ? "#ef4444" : "rgba(255,255,255,0.6)" }}>R$ {t.custo.toFixed(2)}</td>
+                <td className="py-2.5 text-right" style={{ color: t.conversoes > 0 ? "#22c55e" : "rgba(255,255,255,0.4)" }}>{t.conversoes || "—"}</td>
                 <td className="py-2.5 text-right">
                   <span className="px-2 py-0.5 rounded text-xs" style={{
-                    background: t.tipo === "Ampla" ? "rgba(58,123,255,0.15)" : "rgba(245,197,24,0.15)",
-                    color: t.tipo === "Ampla" ? "#3A7BFF" : "#f5c518",
-                    border: `1px solid ${t.tipo === "Ampla" ? "rgba(58,123,255,0.3)" : "rgba(245,197,24,0.3)"}`,
+                    background: t.tipo === "BROAD" ? "rgba(58,123,255,0.15)" : "rgba(245,197,24,0.15)",
+                    color: t.tipo === "BROAD" ? "#3A7BFF" : "#f5c518",
+                    border: `1px solid ${t.tipo === "BROAD" ? "rgba(58,123,255,0.3)" : "rgba(245,197,24,0.3)"}`,
                   }}>
-                    {t.tipo}
+                    {t.tipo === "BROAD" ? "Ampla" : t.tipo === "PHRASE" ? "Frase" : t.tipo === "EXACT" ? "Exata" : t.tipo}
                   </span>
                 </td>
               </tr>

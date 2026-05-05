@@ -136,7 +136,7 @@ export default function Home() {
       <main className="p-6 max-w-[1600px] mx-auto" style={{ position: "relative", zIndex: 1 }}>
         {tab === "geral" && <VisaoGeral metaData={metaData} loading={loading} />}
         {tab === "meta" && <MetaAds data={metaData} loading={loading} />}
-        {tab === "google" && <GoogleAds />}
+        {tab === "google" && <GoogleAds since={periodo ? getDateRange(periodo).since : dataInicio} until={periodo ? getDateRange(periodo).until : dataFim} />}
         {tab === "crm" && <CRM />}
         {tab === "criativos" && <Criativos metaData={metaData} />}
         {tab === "clarity" && <Clarity />}

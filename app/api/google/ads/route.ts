@@ -26,7 +26,7 @@ async function getAccessToken() {
 }
 
 // Tenta versões da mais nova para mais antiga até encontrar uma válida
-const API_VERSIONS = ["v19", "v20", "v21", "v18", "v17"];
+const API_VERSIONS = ["v22", "v21", "v20", "v19", "v18"];
 
 async function queryGoogleAds(accessToken: string, query: string) {
   for (const version of API_VERSIONS) {
@@ -153,19 +153,22 @@ export async function GET(req: NextRequest) {
 
     // Expõe erros da Google Ads API no body da resposta
     if (metricsData.error) {
-      return NextResponse.json({ error: `Google Ads API: ${JSON.stringify(metricsData.error)}` }, { status: 502 });
+      return NextResponse.json({ error: `Google Ads API: ${JSON.stringify(metricsData.error)}`, raw: metricsData }, { status: 502 });
     }
 
-    // Processa métricas gerais
-    const row = metricsData.results?.[0];
-    const metrics = row ? {
-      spend: Number(row.metrics.costMicros || 0) / 1_000_000,
-      impressions: Number(row.metrics.impressions || 0),
-      clicks: Number(row.metrics.clicks || 0),
-      ctr: Number(row.metrics.ctr || 0) * 100,
-      cpc: Number(row.metrics.averageCpc || 0) / 1_000_000,
-      conversoes: Number(row.metrics.conversions || 0),
-      custoConv: Number(row.metrics.costPerConversion || 0) / 1_000_000,
+    // Agrega métricas de todos os dias (query retorna uma linha por dia)
+    const rows: any[] = metricsData.results || [];
+    const metrics = rows.length > 0 ? {
+      spend: rows.reduce((s: number, r: any) => s + Number(r.metrics.costMicros || 0), 0) / 1_000_000,
+      impressions: rows.reduce((s: number, r: any) => s + Number(r.metrics.impressions || 0), 0),
+      clicks: rows.reduce((s: number, r: any) => s + Number(r.metrics.clicks || 0), 0),
+      ctr: rows.reduce((s: number, r: any) => s + Number(r.metrics.clicks || 0), 0) /
+           Math.max(rows.reduce((s: number, r: any) => s + Number(r.metrics.impressions || 0), 0), 1) * 100,
+      cpc: rows.reduce((s: number, r: any) => s + Number(r.metrics.costMicros || 0), 0) /
+           Math.max(rows.reduce((s: number, r: any) => s + Number(r.metrics.clicks || 0), 0), 1) / 1_000_000,
+      conversoes: rows.reduce((s: number, r: any) => s + Number(r.metrics.conversions || 0), 0),
+      custoConv: rows.reduce((s: number, r: any) => s + Number(r.metrics.costMicros || 0), 0) /
+                 Math.max(rows.reduce((s: number, r: any) => s + Number(r.metrics.conversions || 0), 0), 1) / 1_000_000,
     } : null;
 
     // Processa campanhas

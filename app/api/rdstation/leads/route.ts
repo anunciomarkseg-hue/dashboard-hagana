@@ -25,9 +25,9 @@ export async function GET(req: NextRequest) {
 
   const leads = data || [];
 
-  // Agrupa por origem
+  // Agrupa por origem — tenta derivar da origem real no payload_raw quando utm_source veio vazio
   const porOrigem = leads.reduce((acc: any, l: any) => {
-    const o = l.origem || "Direto";
+    const o = derivarOrigem(l);
     acc[o] = (acc[o] || 0) + 1;
     return acc;
   }, {});
@@ -45,4 +45,20 @@ export async function GET(req: NextRequest) {
     porOrigem,
     porEtapa,
   });
+}
+
+function derivarOrigem(lead: any): string {
+  if (lead.origem && lead.origem !== "Direto" && lead.origem !== "") return lead.origem;
+
+  const cf = lead.payload_raw?.custom_fields || {};
+  const crmOrigem = (cf["Origem da Oportunidade no CRM (última atualização)"] || "").toLowerCase();
+  if (crmOrigem.includes("google")) return "Google Ads";
+  if (crmOrigem.includes("meta") || crmOrigem.includes("facebook") || crmOrigem.includes("social pago")) return "Meta Ads";
+
+  const source = (lead.payload_raw?.traffic_source || lead.utm_source || "").toLowerCase();
+  if (source.includes("google") || source.includes("cpc")) return "Google Ads";
+  if (source.includes("facebook") || source.includes("instagram") || source.includes("meta")) return "Meta Ads";
+  if (source.includes("organic")) return "Orgânico";
+
+  return lead.origem || "Direto";
 }

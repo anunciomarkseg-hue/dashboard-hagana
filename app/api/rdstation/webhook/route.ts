@@ -54,5 +54,12 @@ function detectarOrigem(lead: any): string {
   if (campaign.includes("google")) return "Google Ads";
   if (campaign.includes("meta") || campaign.includes("facebook")) return "Meta Ads";
   if (source.includes("organic")) return "Orgânico";
+
+  // Tenta custom fields do RD Station quando utm_source veio vazio
+  const cf = lead.custom_fields || {};
+  const crmOrigem = (cf["Origem da Oportunidade no CRM (última atualização)"] || "").toLowerCase();
+  if (crmOrigem.includes("google")) return "Google Ads";
+  if (crmOrigem.includes("meta") || crmOrigem.includes("facebook") || crmOrigem.includes("social pago")) return "Meta Ads";
+
   return source || "Direto";
 }

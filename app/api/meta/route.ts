@@ -39,6 +39,11 @@ export async function GET(req: NextRequest) {
     );
     const adsJson = await adsRes.json();
 
+    // Expõe erros da Meta API se houver
+    if (insightsJson.error) {
+      return NextResponse.json({ meta_error: insightsJson.error, token_loaded: !!TOKEN }, { status: 502 });
+    }
+
     return NextResponse.json({
       insights: insightsJson.data || [],
       campanhas: campanhasJson.data || [],
@@ -46,6 +51,6 @@ export async function GET(req: NextRequest) {
       ads: adsJson.data || [],
     });
   } catch (err) {
-    return NextResponse.json({ error: "Erro ao buscar Meta API" }, { status: 500 });
+    return NextResponse.json({ error: String(err), token_loaded: !!TOKEN }, { status: 500 });
   }
 }

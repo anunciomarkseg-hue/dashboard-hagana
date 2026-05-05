@@ -19,12 +19,15 @@ async function getAccessToken() {
     }),
   });
   const data = await res.json();
+  if (!data.access_token) {
+    throw new Error(`OAuth refresh failed: ${data.error} — ${data.error_description}`);
+  }
   return data.access_token as string;
 }
 
 async function queryGoogleAds(accessToken: string, query: string) {
   const res = await fetch(
-    `https://googleads.googleapis.com/v17/customers/${CUSTOMER_ID}/googleAds:search`,
+    `https://googleads.googleapis.com/v18/customers/${CUSTOMER_ID}/googleAds:search`,
     {
       method: "POST",
       headers: {
@@ -36,7 +39,12 @@ async function queryGoogleAds(accessToken: string, query: string) {
       body: JSON.stringify({ query }),
     }
   );
-  return res.json();
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Google Ads API (${res.status}): ${text.slice(0, 300)}`);
+  }
 }
 
 export async function GET(req: NextRequest) {

@@ -32,7 +32,7 @@ function Gauge({ value, max, color, label, display }: any) {
   );
 }
 
-export default function VisaoGeral({ metaData, loading }: { metaData: any; loading: boolean }) {
+export default function VisaoGeral({ metaData, googleData, loading }: { metaData: any; googleData: any; loading: boolean }) {
   const insights = metaData?.insights || [];
   const meta = insights.reduce(
     (acc: any, d: any) => {
@@ -48,8 +48,18 @@ export default function VisaoGeral({ metaData, loading }: { metaData: any; loadi
     { spend: 0, reach: 0, impressions: 0, leads: 0, landingPage: 0 }
   );
 
-  // Google mock (será conectado depois)
-  const google = { spend: 764.37, impressions: 1125, clicks: 64, ctr: 5.69, leads: 3, landingPage: 37, cpc: 11.94, conv: 3, custoConv: 254.79 };
+  const gm = googleData?.metrics;
+  const google = {
+    spend: gm?.spend ?? 0,
+    impressions: gm?.impressions ?? 0,
+    clicks: gm?.clicks ?? 0,
+    ctr: gm?.ctr ?? 0,
+    leads: gm?.conversoes ?? 0,
+    landingPage: gm?.clicks ?? 0,
+    cpc: gm?.cpc ?? 0,
+    conv: gm?.conversoes ?? 0,
+    custoConv: gm?.custoConv ?? 0,
+  };
 
   const totalSpend = meta.spend + google.spend;
   const totalLeads = meta.leads + google.leads;
@@ -70,8 +80,8 @@ export default function VisaoGeral({ metaData, loading }: { metaData: any; loadi
           { label: "Alcance Meta", value: loading ? "—" : meta.reach.toLocaleString("pt-BR"), sub: "pessoas únicas", color: "#22c55e" },
           { label: "Impressões Totais", value: loading ? "—" : totalImpressions.toLocaleString("pt-BR"), sub: "Meta + Google", color: "#ffffff" },
           { label: "Entr. Página Meta", value: loading ? "—" : meta.landingPage.toLocaleString("pt-BR"), sub: "visualizações", color: "#f5c518" },
-          { label: "Cliques Google", value: String(google.clicks), sub: `CTR ${google.ctr}%`, color: "#22c55e" },
-          { label: "Leads Google", value: String(google.leads), sub: "via Google", color: "#22c55e" },
+          { label: "Cliques Google", value: loading ? "—" : String(google.clicks), sub: loading ? "" : `CTR ${google.ctr.toFixed(2)}%`, color: "#22c55e" },
+          { label: "Conversões Google", value: loading ? "—" : String(google.conv), sub: "via Google", color: "#22c55e" },
           { label: "Leads Meta", value: loading ? "—" : String(meta.leads), sub: "via Meta", color: "#22c55e" },
           { label: "CPL Médio", value: loading ? "—" : brl(cplMedio), sub: `R$${totalSpend.toFixed(0)} ÷ ${totalLeads} leads`, color: "#3A7BFF" },
         ].map((k) => (
@@ -121,16 +131,16 @@ export default function VisaoGeral({ metaData, loading }: { metaData: any; loadi
               </div>
               <p className="font-semibold text-white">Google Ads</p>
             </div>
-            <p className="font-bold" style={{ color: "#f5c518" }}>{brl(google.spend)}</p>
+            <p className="font-bold" style={{ color: "#f5c518" }}>{loading ? "—" : brl(google.spend)}</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { l: "Impressões", v: google.impressions.toLocaleString("pt-BR"), s: "pesquisa", c: "#ffffff" },
-              { l: "Cliques", v: String(google.clicks), s: `CTR ${google.ctr}%`, c: "#22c55e" },
-              { l: "Entr. Página", v: String(google.landingPage), s: "via Google", c: "#f5c518" },
-              { l: "CPC Médio", v: brl(google.cpc), s: "", c: "#ffffff" },
-              { l: "Conversões", v: String(google.conv), s: "via Google", c: "#22c55e" },
-              { l: "Custo/Conv.", v: brl(google.custoConv), s: "", c: "#f5c518" },
+              { l: "Impressões", v: loading ? "—" : google.impressions.toLocaleString("pt-BR"), s: "pesquisa", c: "#ffffff" },
+              { l: "Cliques", v: loading ? "—" : String(google.clicks), s: loading ? "" : `CTR ${google.ctr.toFixed(2)}%`, c: "#22c55e" },
+              { l: "CPC Médio", v: loading ? "—" : brl(google.cpc), s: "", c: "#ffffff" },
+              { l: "Conversões", v: loading ? "—" : String(google.conv), s: "via Google", c: "#22c55e" },
+              { l: "Custo/Conv.", v: loading ? "—" : brl(google.custoConv), s: "", c: "#f5c518" },
+              { l: "Custo Total", v: loading ? "—" : brl(google.spend), s: "no período", c: "#f5c518" },
             ].map((k) => (
               <div key={k.l}>
                 <p style={{ fontSize: 9, letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }} className="uppercase mb-1">{k.l}</p>

@@ -41,12 +41,13 @@ export default function Home() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [metaData, setMetaData] = useState<any>(null);
+  const [googleData, setGoogleData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!periodo && (!dataInicio || !dataFim)) return;
 
-    async function fetchMeta() {
+    async function fetchAll() {
       setLoading(true);
       try {
         let since, until;
@@ -56,16 +57,20 @@ export default function Home() {
           since = dataInicio;
           until = dataFim;
         }
-        const res = await fetch(`/api/meta?since=${since}&until=${until}`);
-        const json = await res.json();
-        setMetaData(json);
+        const [metaRes, googleRes] = await Promise.all([
+          fetch(`/api/meta?since=${since}&until=${until}`),
+          fetch(`/api/google/ads?since=${since}&until=${until}`),
+        ]);
+        const [metaJson, googleJson] = await Promise.all([metaRes.json(), googleRes.json()]);
+        setMetaData(metaJson);
+        setGoogleData(googleJson);
       } catch (e) {
-        console.error("Erro Meta API:", e);
+        console.error("Erro APIs:", e);
       }
       setLoading(false);
     }
 
-    fetchMeta();
+    fetchAll();
   }, [periodo, dataInicio, dataFim]);
 
   return (
@@ -134,7 +139,7 @@ export default function Home() {
 
       {/* CONTENT */}
       <main className="p-6 max-w-[1600px] mx-auto" style={{ position: "relative", zIndex: 1 }}>
-        {tab === "geral" && <VisaoGeral metaData={metaData} loading={loading} />}
+        {tab === "geral" && <VisaoGeral metaData={metaData} googleData={googleData} loading={loading} />}
         {tab === "meta" && <MetaAds data={metaData} loading={loading} />}
         {tab === "google" && <GoogleAds since={periodo ? getDateRange(periodo).since : dataInicio} until={periodo ? getDateRange(periodo).until : dataFim} />}
         {tab === "crm" && <CRM />}

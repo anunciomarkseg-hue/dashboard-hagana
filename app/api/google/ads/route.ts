@@ -151,6 +151,11 @@ export async function GET(req: NextRequest) {
       queryGoogleAds(accessToken, termosQuery),
     ]);
 
+    // Expõe erros da Google Ads API no body da resposta
+    if (metricsData.error) {
+      return NextResponse.json({ error: `Google Ads API: ${JSON.stringify(metricsData.error)}` }, { status: 502 });
+    }
+
     // Processa métricas gerais
     const row = metricsData.results?.[0];
     const metrics = row ? {

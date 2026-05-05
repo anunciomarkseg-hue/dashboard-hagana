@@ -25,26 +25,33 @@ async function getAccessToken() {
   return data.access_token as string;
 }
 
+// Tenta versões da mais nova para mais antiga até encontrar uma válida
+const API_VERSIONS = ["v19", "v20", "v21", "v18", "v17"];
+
 async function queryGoogleAds(accessToken: string, query: string) {
-  const res = await fetch(
-    `https://googleads.googleapis.com/v17/customers/${CUSTOMER_ID}/googleAds:search`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "developer-token": DEVELOPER_TOKEN,
-        "login-customer-id": MCC_ID,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query }),
+  for (const version of API_VERSIONS) {
+    const res = await fetch(
+      `https://googleads.googleapis.com/${version}/customers/${CUSTOMER_ID}/googleAds:search`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "developer-token": DEVELOPER_TOKEN,
+          "login-customer-id": MCC_ID,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
+      }
+    );
+    if (res.status === 404) continue;
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`Google Ads API ${version} (${res.status}): ${text.slice(0, 300)}`);
     }
-  );
-  const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(`Google Ads API (${res.status}): ${text.slice(0, 300)}`);
   }
+  throw new Error("Nenhuma versão da Google Ads API respondeu (tentou v17-v21)");
 }
 
 export async function GET(req: NextRequest) {
@@ -54,6 +61,19 @@ export async function GET(req: NextRequest) {
 
   if (!since || !until) {
     return NextResponse.json({ error: "since e until obrigatórios" }, { status: 400 });
+  }
+
+  // Diagnóstico: verifica env vars
+  const envCheck = {
+    CLIENT_ID: !!CLIENT_ID,
+    CLIENT_SECRET: !!CLIENT_SECRET,
+    REFRESH_TOKEN: !!REFRESH_TOKEN,
+    DEVELOPER_TOKEN: !!DEVELOPER_TOKEN,
+    CUSTOMER_ID: CUSTOMER_ID || "MISSING",
+    MCC_ID: MCC_ID || "MISSING",
+  };
+  if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN || !DEVELOPER_TOKEN || !CUSTOMER_ID || !MCC_ID) {
+    return NextResponse.json({ error: "Env vars faltando", envCheck }, { status: 500 });
   }
 
   try {

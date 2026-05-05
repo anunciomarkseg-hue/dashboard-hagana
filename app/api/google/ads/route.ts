@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
-const REFRESH_TOKEN = process.env.GOOGLE_ADS_REFRESH_TOKEN!;
-const DEVELOPER_TOKEN = process.env.GOOGLE_ADS_DEVELOPER_TOKEN!;
-const CUSTOMER_ID = process.env.GOOGLE_ADS_CUSTOMER_ID!;
-const MCC_ID = process.env.GOOGLE_ADS_MCC_ID!;
+const CLIENT_ID = (process.env.GOOGLE_CLIENT_ID || "").trim();
+const CLIENT_SECRET = (process.env.GOOGLE_CLIENT_SECRET || "").trim();
+const REFRESH_TOKEN = (process.env.GOOGLE_ADS_REFRESH_TOKEN || "").trim();
+const DEVELOPER_TOKEN = (process.env.GOOGLE_ADS_DEVELOPER_TOKEN || "").trim();
+const CUSTOMER_ID = (process.env.GOOGLE_ADS_CUSTOMER_ID || "").trim();
+const MCC_ID = (process.env.GOOGLE_ADS_MCC_ID || "").trim();
 
 async function getAccessToken() {
   const res = await fetch("https://oauth2.googleapis.com/token", {
